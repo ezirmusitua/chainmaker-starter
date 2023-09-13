@@ -1,0 +1,80 @@
+version: "3.9"
+
+services:
+  cm_db:
+    container_name: "cm_db"
+    image: mysql:5.7
+    volumes:
+      - /data/chainmaker/mgmt:/var/lib/mysql
+    restart: always
+    env_file:
+      - management_configs/.env
+    command:
+      [
+        "mysqld",
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci",
+        "--max_allowed_packet=200M",
+      ]
+
+  cm_mgmt_server:
+    container_name: "cm_mgmt_server"
+    depends_on:
+      - cm_db
+    build:
+      context: management-backend
+      dockerfile: Dockerfile
+    image: management-backend:v2.3.0
+    volumes:
+      - /src/chainmaker/management_configs:/chainmaker-management/configs
+    ports:
+      - "9999:9999"
+    restart: always
+
+  cm_mgmt_web:
+    container_name: "cm_mgmt_web"
+    depends_on:
+      - cm_mgmt_server
+    image: chainmakerofficial/management-web:v2.3.0
+    ports:
+      - "9995:80"
+    restart: always
+
+  cm_explorer_db:
+    container_name: "cm_explorer_db"
+    image: mysql:5.7
+    volumes:
+      - /data/chainmaker/explorer:/var/lib/mysql
+    restart: always
+    env_file:
+      - explorer_configs/.env
+    command:
+      [
+        "mysqld",
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci",
+        "--max_allowed_packet=200M",
+      ]
+
+  cm_explorer_server:
+    container_name: "cm_explorer_server"
+    image: chainmakerofficial/explorer-backend:v2.3.0
+    volumes:
+      - /src/chainmaker/explorer_configs:/chainmaker-explorer-backend/configs
+    depends_on:
+      - cm_explorer_db
+    ports:
+      - "9997:9997"
+    environment:
+      show_config: true
+    restart: always
+      
+  cm_explorer_web:
+    container_name: "cm_explorer_web"
+    depends_on:
+      - cm_explorer_server
+    image: chainmakerofficial/explorer-web:v2.3.0
+    ports:
+      - "9996:8080"
+    restart: always
+

@@ -1,0 +1,3 @@
+[submodule "management-backend"]
+	path = management-backend
+	url = https://git.chainmaker.org.cn/chainmaker/management-backend.git
